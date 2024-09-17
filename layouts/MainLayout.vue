@@ -82,18 +82,77 @@
                             placeholder="kitchen accessories"
                             v-model="searchItem"
                         >
+                        <Icon 
+                            v-if="isSearching"
+                            name="eos-icons:loading"
+                            size="25"
+                            class="mr-2"
+                        />
+                        <button class="flex items-center h-[100%] p-1.5 px-2 bg-[#ff4646]">
+                            <Icon name="ph:magnifying-glass" size="20" color="#ffffff"/>
+                        </button>
+                    </div>
+                    <div class="absolute bg-white max-w-[700px] h-auto w-full">
+                       <div class="p-1">
+                            <NuxtLink
+                                :to="`/item/1`"
+                                class="flex items-center justify-between w-full cursor-pointer hover:bg-gray-100"
+                            >
+                                <div class="flex items-center">
+                                    <img src="https://picsum.photos/id/82/300/320" alt="" class="rounded-md" width="40">
+                                    <div class="truncate ml-2">Testing</div>
+                                </div>
+                                <div class="truncate">$ 98.99</div>
+                            </NuxtLink>
+                       </div> 
                     </div>
                 </div>
             </div>
+            <NuxtLink to="/shoppingcart" class="flex items-center">
+                <button class="relative md:block hidden" @mouseenter="isCartHover = true" @mouseleave="isCartHover = false">
+                    <div class="min-w-[40px]">
+                        <Icon name="ph:shopping-cart-simple-light" size="33" :color="isCartHover ? '#ff46464' : ''"/>
+                    </div>
+                    <span 
+                        class="
+                        absolute 
+                        flex 
+                        items-center 
+                        justify-center 
+                        -right-[3px] 
+                        top-0 
+                        bg-[#ff4646] 
+                        h-[17px] 
+                        min-w-[17px] 
+                        text-xs 
+                        text-white 
+                        px-0.5 
+                        rounded-full"
+                    >
+                            10
+                    </span>
+                </button>
+            </NuxtLink>
+            <button class="md:hidden block rounded-full p-1.5 -mt-[4px] hover:bg-gray-200" @click="userStore.isMenuOverlay = true">
+                <Icon name="radix-icons:hamburger-menu" size="33" />
+            </button>
         </div>
     </div>
   </div>
+
+  <Loading v-if="userStore.isLoading"/>
+
+  <div class="lg:pt-[150px] md:pt-[130px] pt-[80px]"></div>
+  <slot />
+  <Footer v-if="!userStore.isLoading"/>
 </template>
 
 <script lang="ts" setup>
-import {ref} from "vue"
     let isAccountMenu = ref(false)
     let searchItem = ref('')
+    let isSearching = ref(true)
+    let isCartHover = ref(false)
+    let userStore = reactive({isLoading: false})
 </script>
 
 <style>
