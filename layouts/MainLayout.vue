@@ -148,11 +148,12 @@
 </template>
 
 <script lang="ts" setup>
+    import { useUserStore } from '~/stores/user';
+    const userStore = useUserStore()
     let isAccountMenu = ref(false)
     let searchItem = ref('')
     let isSearching = ref(true)
     let isCartHover = ref(false)
-    let userStore = reactive({isLoading: false})
 </script>
 
 <style>
