@@ -20,7 +20,7 @@
     "@prisma/client": "^5.19.1",
     "@stripe/stripe-js": "^4.4.0",
     "nuxt": "^3.13.0",
-    "nuxt-icon": "^1.0.0-beta.7",
+    "nuxt-icon": "^0.3.3",
     "nuxt-lodash": "^2.5.3",
     "pinia": "^2.2.2",
     "prisma": "^5.19.1",
