@@ -5,7 +5,8 @@ export const useUserStore = defineStore('user', {
         isMenuOverlay: false,
         isLoading: false,
         cart: [],
-        checkout: []
+        checkout: [],
+        selectedArray: []
     }),
     persist: true
 })
