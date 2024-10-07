@@ -5,7 +5,7 @@
             <div class="md:w-[65%]">
                 <div class="bg-white rounded-lg p-4">
                     <div class="text-xl font-semibold mb-2">Shipping Address</div>
-                    <div v-if="false">
+                    <div v-if="currentAddress && currentAddress.data">
                         <NuxtLink to="/address" class="flex items-center pb-2 text-blue-500 hover:text-red-400">
                             <Icon name="mdi:plus" size="18" class="mr-2"/>Update Address
                         </NuxtLink>
@@ -20,15 +20,15 @@
                                 </li>
                                 <li class="flex items-center gap-2">
                                     <div>Address:</div>
-                                    <div class="font-bold">{{ currentAddress.data.name }}</div>
+                                    <div class="font-bold">{{ currentAddress.data.address }}</div>
                                 </li>
                                 <li class="flex items-center gap-2">
                                     <div>Zip Code:</div>
-                                    <div class="font-bold">{{ currentAddress.data.name }}</div>
+                                    <div class="font-bold">{{ currentAddress.data.zipcode }}</div>
                                 </li>
                                 <li class="flex items-center gap-2">
                                     <div>Country:</div>
-                                    <div class="font-bold">{{ currentAddress.data.name }}</div>
+                                    <div class="font-bold">{{ currentAddress.data.country }}</div>
                                 </li>
                             </ul>
                         </div>
@@ -43,7 +43,7 @@
                     </NuxtLink>
                 </div>
                 <div id="Items" class="bg-white rounded-lg p-4 mt-4">
-                    <div v-for="product in products">
+                    <div v-for="product in userStore.checkout">
                         <CheckoutItem :product="product" />
                     </div>
                 </div>
@@ -109,9 +109,13 @@
 <script setup>
 import MainLayout from '~/layouts/MainLayout.vue';
 import CheckoutItem from '~/components/CheckoutItem.vue';
+
 import { useUserStore } from '~/stores/user';
 const userStore = useUserStore();
 const route = useRoute()
+
+const client = useSupabaseClient()
+const user = useSupabaseUser()
 
 let stripe = null
 let elements = null
@@ -121,6 +125,26 @@ let total = ref(0)
 let clientSecret = null
 let currentAddress = ref(null)
 let isProcessing = ref(false)
+
+onBeforeMount(async () => {
+    if(userStore.checkout.length < 1) {
+        return navigateTo('/shoppingcart')
+    }
+    total.value = 0
+
+    if(user.value) {
+        currentAddress.value = await useFetch(`/api/prisma/get-address-by-user/${user.value.id}`)
+        setTimeout(() => userStore.isLoading = false, 200)
+    }
+}
+
+)
+
+watchEffect(() => {
+    if(route.fullPath == 'checkout' && !user.value) {
+        return navigateTo('/auth')
+    }
+})
 
 onMounted(() => {
     isProcessing.value = true
@@ -137,35 +161,91 @@ watch(() => total.value, () => {
 })
 
 const stripeInit = async () => {
+    const config = useRuntimeConfig()
+    stripe = Stripe(config.public.stripePk)
 
+    let res = await $fetch('/api/stripe/paymentintent', {
+        method: 'POST',
+        body: {
+            amount: total.value
+        }
+    })
+
+    clientSecret = res.client_secret
+
+    elements = stripe.elements()
+
+    let style = {
+        base: {
+            fontSize: '18px'
+        },
+        invalid: {
+            fontFamily: 'Arial, sans-serif',
+            color: '#ee4b2b',
+            iconColor: '#ee4b2b'
+        }
+    }
+
+    card = elements.create('card', {
+        hidePostalCode: true,
+        style: style
+    })
+
+    card.mount('#card-element')
+    card.on('change', function(event) {
+        document.querySelector('button').disabled = event.empty
+        document.querySelector('#card-error').textContent = event.error ? event.error.message : ''
+    })
+
+    isProcessing.value = false
 }
 
 const pay = async () => {
+    if(currentAddress.value && currentAddress.value.data == '') {
+        showError('Please add shipping address')
+        return
+    }
+    isProcessing.value = true
 
+    let result = await stripe.confirmCardPayment(clientSecret, {
+        payment_method: {card: card}
+    })
+
+    if(result.error) {
+        showError(result.error.message)
+        isProcessing.value = false
+    } else {
+        await createOrder(result.paymentIntent.id)
+        userStore.cart = []
+        userStore.checkout = []
+        setTimeout(() => {
+            return navigateTo('/success')
+        }, 500)
+    }
 }
 
 const createOrder = async (stripeId) => {
-
+    await useFetch(`/api/prisma/create-orders`, {
+        method: 'POST',
+        body: {
+            userId: user.value.id,
+            stripeId: stripeId,
+            name: currentAddress.value.data.name,
+            address: currentAddress.value.data.address,
+            zipcode: currentAddress.value.data.zipcode,
+            city: currentAddress.value.data.city,
+            country: currentAddress.value.data.country,
+            products: userStore.checkout
+        }
+    })
 }
 
 const showError = (errorMsgText) => {
+    let errorMsg = document.querySelector('#card-error')
 
+    errorMsg.textContent = errorMsgText
+    setTimeout(() => {
+        errorMsg.textContent = ''
+    }, 4000);
 }
-
-const products = [
-      {id: 1, title: "Shoes", description: "this is description", url: "https://picsum.photos/id/7/800/800", price: 9199},
-      {id: 2, title: "Shoes", description: "this is description", url: "https://picsum.photos/id/6/800/800", price: 9299},
-      {id: 3, title: "Shoes", description: "this is description", url: "https://picsum.photos/id/71/800/800", price: 3999},
-      {id: 4, title: "Shoes", description: "this is description", url: "https://picsum.photos/id/72/800/800", price: 4999},
-      {id: 5, title: "Shoes", description: "this is description", url: "https://picsum.photos/id/73/800/800", price: 5999},
-      {id: 6, title: "Shoes", description: "this is description", url: "https://picsum.photos/id/74/800/800", price: 6999},
-      {id: 7, title: "Shoes", description: "this is description", url: "https://picsum.photos/id/75/800/800", price: 7999},
-      {id: 8, title: "Shoes", description: "this is description", url: "https://picsum.photos/id/76/800/800", price: 8999},
-      {id: 9, title: "Shoes", description: "this is description", url: "https://picsum.photos/id/77/800/800", price: 3999},
-      {id: 10, title: "Shoes", description: "this is description", url: "https://picsum.photos/id/87/800/800", price: 12999},
-      {id: 11, title: "Shoes", description: "this is description", url: "https://picsum.photos/id/79/800/800", price: 91299},
-      {id: 12, title: "Shoes", description: "this is description", url: "https://picsum.photos/id/12/800/800", price: 9949},
-      {id: 13, title: "Shoes", description: "this is description", url: "https://picsum.photos/id/123/800/800", price: 954399},
-      {id: 14, title: "Shoes", description: "this is description", url: "https://picsum.photos/id/733/800/800", price: 999923},
-    ]
 </script>

@@ -18,6 +18,7 @@
   let windowWidth = ref(process.client ? window.innerWidth : '')
 
   onMounted(() => {
+    userStore.isLoading = false
     window.addEventListener('resize', function() {
       windowWidth.value = window.innerWidth
     })

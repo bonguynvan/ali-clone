@@ -1,11 +1,11 @@
 <template>
   <MainLayout>
     <div id="ShoppingCartPage" class="mt-4 max-w-[1200px] mx-auto px-2">
-        <div v-if="false" class="h-[500px] flex items-center justify-center">
+        <div v-if="!userStore.cart.length" class="h-[500px] flex items-center justify-center">
             <div class="pt-20">
                 <img src="/cart-empty.png" alt="" width="250" class="mx-auto">
                 <div class="text-xl text-center mt-4">No items yet?</div>
-                <div class="flex text-center">
+                <div v-if="!user" class="flex text-center">
                   <NuxtLink to="/auth" class="bg-[#fd374f] w-full text-white text-[29px] font-semibold p-1.5 rounded-full mt-4">Sign in</NuxtLink>
                 </div>
             </div>
@@ -14,7 +14,7 @@
           <div class="md:w-[65%]">
             <div class="bg-white rounded-lg p-4">
               <div class="text-2xl font-bold mb-2">
-                Shopping Cart (0)
+                Shopping Cart ({{ userStore.cart.length }})
               </div>
             </div>
             <div class="bg-[#feeeef] rounded-lg pt-4 mt-4">
@@ -22,7 +22,7 @@
             </div>
 
             <div id="Items" class="bg-white rounded-lg p-4 mt-4">
-              <div v-for="product in products">
+              <div v-for="product in userStore.cart">
                 <CartItem
                   :product="product"
                   :selectedArray="selectedArray"
@@ -63,11 +63,10 @@
               </button>
             </div>
             <div id="PaymentProtection" class="bg-white rounded-lg p-4 mt-4">
-              <div class="text-lg font-semibold mb-2">Payent methods</div>
+              <div class="text-lg font-semibold mb-2">Payment methods</div>
               <div class="flex items-center justify-start gap-8 my-4">
                 <div v-for="card in cards">
                   <img class="h-6" :src="card" alt="">
-
                 </div>
               </div>
             </div>
@@ -135,22 +134,6 @@ const goToCheckout = () => {
 
 }
 
-const products = [
-      {id: 1, title: "Shoes", description: "this is description", url: "https://picsum.photos/id/7/800/800", price: 9199},
-      {id: 2, title: "Shoes", description: "this is description", url: "https://picsum.photos/id/6/800/800", price: 9299},
-      {id: 3, title: "Shoes", description: "this is description", url: "https://picsum.photos/id/71/800/800", price: 3999},
-      {id: 4, title: "Shoes", description: "this is description", url: "https://picsum.photos/id/72/800/800", price: 4999},
-      {id: 5, title: "Shoes", description: "this is description", url: "https://picsum.photos/id/73/800/800", price: 5999},
-      {id: 6, title: "Shoes", description: "this is description", url: "https://picsum.photos/id/74/800/800", price: 6999},
-      {id: 7, title: "Shoes", description: "this is description", url: "https://picsum.photos/id/75/800/800", price: 7999},
-      {id: 8, title: "Shoes", description: "this is description", url: "https://picsum.photos/id/76/800/800", price: 8999},
-      {id: 9, title: "Shoes", description: "this is description", url: "https://picsum.photos/id/77/800/800", price: 3999},
-      {id: 10, title: "Shoes", description: "this is description", url: "https://picsum.photos/id/87/800/800", price: 12999},
-      {id: 11, title: "Shoes", description: "this is description", url: "https://picsum.photos/id/79/800/800", price: 91299},
-      {id: 12, title: "Shoes", description: "this is description", url: "https://picsum.photos/id/12/800/800", price: 9949},
-      {id: 13, title: "Shoes", description: "this is description", url: "https://picsum.photos/id/123/800/800", price: 954399},
-      {id: 14, title: "Shoes", description: "this is description", url: "https://picsum.photos/id/733/800/800", price: 999923},
-    ]
 
 
 
